@@ -12,6 +12,7 @@ import {
 } from "./altium-values"
 import { getPcbLayerColor, PCB_BOARD_FILL_COLOR } from "./pcb-layer"
 import { isPcbSolderMaskLayer } from "./pcb-solder-mask"
+import { getPcbTextFontSize } from "./pcb-text-font-size"
 import { getPcbTextPositioning } from "./pcb-text-positioning"
 import { renderPcbDimension } from "./render-pcb-dimension"
 import type { AltiumPcbSvgOptions, SvgViewport } from "./svg-types"
@@ -147,7 +148,7 @@ export function renderPcbRecord({
     if (!normalizedText) return undefined
     const x = viewport.toX(getPcbMeasurement(record, "X"))
     const y = viewport.toY(getPcbMeasurement(record, "Y"))
-    const height = Math.max(getPcbMeasurement(record, "HEIGHT", 30), 3)
+    const height = getPcbTextFontSize(record)
     const rotation = Number(record.getCaseInsensitive("ROTATION") ?? 0)
     const mirror = record.getBoolean("MIRROR") ? -1 : 1
     const fontName = record.getDecoded("FONTNAME") || "Arial"
