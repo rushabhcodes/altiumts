@@ -23,7 +23,7 @@ test("compares complete nema17 knockout text with the Circuit JSON reference", a
   expect(labels.map((record) => record.text).sort()).toEqual(["DATA", "PWR"])
   for (const record of labels)
     expect(
-      record.getAltiumMeasurement("MARGINBORDERWIDTH")!.toMillimeters(),
+      record.getAltiumMeasurement("MARGINBORDERWIDTH")?.toMillimeters(),
     ).toBeCloseTo(0.18, 4)
   const reference = await Bun.file(
     new URL("../fixtures/nema17-circuit-json-reference.svg", import.meta.url),
@@ -39,6 +39,6 @@ test("compares complete nema17 knockout text with the Circuit JSON reference", a
       (_, attributes: string) =>
         `<svg x="${x}" y="30" ${attributes.replace(/\s(?:width|height)="[^"]*"/g, "")} width="800" height="800">`,
     )
-  const comparison = `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="830" viewBox="0 0 1600 830"><rect width="1600" height="830" fill="#f1f5f9"/><text x="12" y="20" font-family="Arial" font-size="14">NEMA17 Circuit JSON reference</text><text x="812" y="20" font-family="Arial" font-size="14">NEMA17 Altium knockout rendering</text>${panel(reference, 0)}${panel(rendered, 800)}</svg>`
+  const comparison = `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="830" viewBox="0 0 1600 830"><title>NEMA17 knockout comparison</title><rect width="1600" height="830" fill="#f1f5f9"/><text x="12" y="20" font-family="Arial" font-size="14">NEMA17 Circuit JSON reference</text><text x="812" y="20" font-family="Arial" font-size="14">NEMA17 Altium knockout rendering</text>${panel(reference, 0)}${panel(rendered, 800)}</svg>`
   await expect(comparison).toMatchSvgSnapshot(import.meta.path)
 })

@@ -36,10 +36,8 @@ test("shows knockout text against anchors for all nine alignments", async () => 
   })
   expect(svg.match(/data-knockout="true"/g)).toHaveLength(9)
   for (const [index, text] of alignments.entries()) {
-    const left = [0, (-text.length * 30 * 0.8) / 2, -text.length * 30 * 0.8][
-      Math.floor(index / 3)
-    ]!
-    const top = [0, -15, -30][index % 3]!
+    const left = -(Math.floor(index / 3) * text.length * 30 * 0.8) / 2
+    const top = -(index % 3) * 15
     expect(svg).toContain(`x="${left - 10}" y="${top - 10}"`)
   }
   await expect(svg).toMatchSvgSnapshot(import.meta.path)
