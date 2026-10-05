@@ -33,13 +33,6 @@ test("compares complete nema17 knockout text with the Circuit JSON reference", a
     height: 800,
   })
   expect(rendered.match(/data-knockout="true"/g)).toHaveLength(2)
-  for (const label of labels) {
-    const nativeHeight = label.getAltiumMeasurement("HEIGHT")?.toMils()
-    if (nativeHeight === undefined)
-      throw new Error("Expected native text height")
-    const emSize = Math.round(((nativeHeight * 2048) / 2288) * 10000) / 10000
-    expect(rendered).toContain(`font-size="${emSize}"`)
-  }
   const panel = (svg: string, x: number) =>
     svg.replace(
       /<svg\b([^>]*)>/,

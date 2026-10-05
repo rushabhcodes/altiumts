@@ -1,7 +1,6 @@
 import { decodeAltiumWideString } from "../decode-altium-wide-string"
 import type { AltiumRecord } from "../records/altium-record"
 import { getPcbMeasurement } from "./altium-values"
-import { getPcbTextFontSize } from "./pcb-text-font-size"
 import { getPcbTextPositioning } from "./pcb-text-positioning"
 import type { SvgViewport } from "./svg-types"
 import { escapeXml, formatSvgNumber } from "./svg-utils"
@@ -30,7 +29,7 @@ export function renderPcbText({
   if (!normalizedText) return undefined
   const x = viewport.toX(getPcbMeasurement(record, "X"))
   const y = viewport.toY(getPcbMeasurement(record, "Y"))
-  const height = getPcbTextFontSize(record)
+  const height = Math.max(getPcbMeasurement(record, "HEIGHT", 30), 3)
   const rotation = Number(record.getCaseInsensitive("ROTATION") ?? 0)
   const mirror = record.getBoolean("MIRROR") ? -1 : 1
   const fontName = record.getDecoded("FONTNAME") || "Arial"
