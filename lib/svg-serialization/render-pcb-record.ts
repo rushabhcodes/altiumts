@@ -179,19 +179,22 @@ export function renderPcbRecord({
       let top = 0
       if (positioning.baseline === "central") top = -height / 2
       else if (positioning.baseline === "text-after-edge") top = -height
-      const width = record.getBoolean("INVERTEDRECT")
-        ? getPcbMeasurement(record, "TEXTBOXWIDTH", textWidth + 2 * margin)
-        : textWidth + 2 * margin
-      const boxHeight = record.getBoolean("INVERTEDRECT")
-        ? getPcbMeasurement(record, "TEXTBOXHEIGHT", textHeight + 2 * margin)
-        : textHeight + 2 * margin
+      let width = textWidth + 2 * margin
+      let boxHeight = textHeight + 2 * margin
+      if (record.getBoolean("INVERTEDRECT")) {
+        width = getPcbMeasurement(record, "TEXTBOXWIDTH", width)
+        boxHeight = getPcbMeasurement(record, "TEXTBOXHEIGHT", boxHeight)
+      }
       const rectangle = `x="${formatSvgNumber(left - margin)}" y="${formatSvgNumber(top - margin)}" width="${formatSvgNumber(width)}" height="${formatSvgNumber(boxHeight)}"`
       const maskId = `pcb-knockout-${recordIndex}`
       const maskedText = lines
-        .map(
-          (line, index) =>
-            `<text x="0" y="${formatSvgNumber(index * height * 1.2)}" fill="black" font-family="${escapeXml(fontName)}, sans-serif" font-size="${formatSvgNumber(height)}" font-weight="${fontWeight}" font-style="${fontStyle}" text-anchor="${positioning.anchor}" dominant-baseline="${positioning.baseline}"${line.length ? ` textLength="${formatSvgNumber(line.length * height * 0.8)}" lengthAdjust="spacingAndGlyphs"` : ""}>${escapeXml(line)}</text>`,
-        )
+        .map((line, index) => {
+          let lengthAttributes = ""
+          if (line.length > 0) {
+            lengthAttributes = ` textLength="${formatSvgNumber(line.length * height * 0.8)}" lengthAdjust="spacingAndGlyphs"`
+          }
+          return `<text x="0" y="${formatSvgNumber(index * height * 1.2)}" fill="black" font-family="${escapeXml(fontName)}, sans-serif" font-size="${formatSvgNumber(height)}" font-weight="${fontWeight}" font-style="${fontStyle}" text-anchor="${positioning.anchor}" dominant-baseline="${positioning.baseline}"${lengthAttributes}>${escapeXml(line)}</text>`
+        })
         .join("")
       return `<g ${metadata} data-knockout="true" transform="translate(${formatSvgNumber(x)} ${formatSvgNumber(y)}) rotate(${formatSvgNumber(-rotation)}) scale(${mirror} 1)"><defs><mask id="${maskId}" maskUnits="userSpaceOnUse" ${rectangle} style="mask-type:luminance"><rect ${rectangle} fill="white"/>${maskedText}</mask></defs><rect ${rectangle} fill="${color}" mask="url(#${maskId})"/></g>`
     }
