@@ -3,7 +3,7 @@ import { parseAltiumPcbDoc, serializeAltiumPcbToSvg } from "../../lib"
 
 test("shows knockout text against anchors for all nine alignments", async () => {
   const records = [
-    "|RECORD=Board|VX0=0mil|VY0=0mil|VX1=1500mil|VY1=0mil|VX2=1500mil|VY2=1200mil|VX3=0mil|VY3=1200mil",
+    "|RECORD=Board|VX0=0mil|VY0=0mil|VX1=1500mil|VY1=0mil|VX2=1500mil|VY2=900mil|VX3=0mil|VY3=900mil",
   ]
   const alignments = [
     "top_left",
@@ -20,7 +20,7 @@ test("shows knockout text against anchors for all nine alignments", async () => 
     const column = Math.floor(index / 3)
     const row = index % 3
     const x = 250 + column * 500
-    const y = 950 - row * 350
+    const y = 700 - row * 250
     records.push(
       `|RECORD=Text|LAYER=TOPOVERLAY|X=${x}mil|Y=${y}mil|HEIGHT=30mil|TEXT=${text}|JUSTIFICATION=${index + 1}|INVERTED=TRUE|MARGINBORDERWIDTH=10mil`,
     )
