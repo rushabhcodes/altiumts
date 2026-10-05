@@ -26,12 +26,14 @@ const COPPER_FILL_OPACITY = 0.32
 
 export function renderPcbRecord({
   record,
+  recordIndex,
   text,
   shouldFillPolygon,
   svgOptions,
   viewport,
 }: {
   record: AltiumRecord
+  recordIndex: number
   text?: string
   shouldFillPolygon: boolean
   svgOptions: AltiumPcbSvgOptions
@@ -164,6 +166,41 @@ export function renderPcbRecord({
                 `<tspan x="0" dy="${index === 0 ? "0" : formatSvgNumber(height * 1.2)}">${escapeXml(line)}</tspan>`,
             )
             .join("")
+    if (record.getBoolean("INVERTED")) {
+      const margin = Math.max(getPcbMeasurement(record, "MARGINBORDERWIDTH"), 0)
+      // SVG serialization has no font measurement API. Estimate the glyph
+      // width and constrain the text to keep it inside the background.
+      const textWidth =
+        Math.max(...lines.map((line) => line.length)) * height * 0.8
+      const textHeight = height * (1 + (lines.length - 1) * 1.2)
+      const left =
+        positioning.anchor === "middle"
+          ? -textWidth / 2
+          : positioning.anchor === "end"
+            ? -textWidth
+            : 0
+      const top =
+        positioning.baseline === "central"
+          ? -height / 2
+          : positioning.baseline === "text-after-edge"
+            ? -height
+            : 0
+      const width = record.getBoolean("INVERTEDRECT")
+        ? getPcbMeasurement(record, "TEXTBOXWIDTH", textWidth + 2 * margin)
+        : textWidth + 2 * margin
+      const boxHeight = record.getBoolean("INVERTEDRECT")
+        ? getPcbMeasurement(record, "TEXTBOXHEIGHT", textHeight + 2 * margin)
+        : textHeight + 2 * margin
+      const rectangle = `x="${formatSvgNumber(left - margin)}" y="${formatSvgNumber(top - margin)}" width="${formatSvgNumber(width)}" height="${formatSvgNumber(boxHeight)}"`
+      const maskId = `pcb-knockout-${recordIndex}`
+      const maskedText = lines
+        .map(
+          (line, index) =>
+            `<text x="0" y="${formatSvgNumber(index * height * 1.2)}" fill="black" font-family="${escapeXml(fontName)}, sans-serif" font-size="${formatSvgNumber(height)}" font-weight="${fontWeight}" font-style="${fontStyle}" text-anchor="${positioning.anchor}" dominant-baseline="${positioning.baseline}"${line.length ? ` textLength="${formatSvgNumber(line.length * height * 0.8)}" lengthAdjust="spacingAndGlyphs"` : ""}>${escapeXml(line)}</text>`,
+        )
+        .join("")
+      return `<g ${metadata} data-knockout="true" transform="translate(${formatSvgNumber(x)} ${formatSvgNumber(y)}) rotate(${formatSvgNumber(-rotation)}) scale(${mirror} 1)"><defs><mask id="${maskId}" maskUnits="userSpaceOnUse" ${rectangle} style="mask-type:luminance"><rect ${rectangle} fill="white"/>${maskedText}</mask></defs><rect ${rectangle} fill="${color}" mask="url(#${maskId})"/></g>`
+    }
     return `<text ${metadata} x="0" y="0" fill="${color}" font-family="${escapeXml(fontName)}, sans-serif" font-size="${formatSvgNumber(height)}" font-weight="${fontWeight}" font-style="${fontStyle}" text-anchor="${positioning.anchor}" dominant-baseline="${positioning.baseline}" transform="translate(${formatSvgNumber(x)} ${formatSvgNumber(y)}) rotate(${formatSvgNumber(-rotation)}) scale(${mirror} 1)">${textContent}</text>`
   }
 
