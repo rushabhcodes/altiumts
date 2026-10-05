@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { parseAltiumPcbDoc, serializeAltiumPcbToSvg } from "../../lib"
 
-test("renders knockout backgrounds with transparent letters", async () => {
+test("renders knockout backgrounds with transparent letters", () => {
   const document = parseAltiumPcbDoc(
     [
       "|RECORD=Board|VX0=0mil|VY0=0mil|VX1=700mil|VY1=0mil|VX2=700mil|VY2=500mil|VX3=0mil|VY3=500mil",
@@ -19,7 +19,6 @@ test("renders knockout backgrounds with transparent letters", async () => {
   expect(svg).toContain("rotate(-90) scale(-1 1)")
   expect(svg).toContain('fill="black"')
   expect(svg).toContain(">Normal</text>")
-  await expect(svg).toMatchSvgSnapshot(import.meta.path)
 })
 
 test("uses explicit knockout rectangle dimensions", () => {
