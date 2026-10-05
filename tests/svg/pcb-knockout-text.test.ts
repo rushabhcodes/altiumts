@@ -30,3 +30,27 @@ test("uses explicit knockout rectangle dimensions", () => {
   expect(svg).toContain('width="200" height="80"')
   expect(svg).toContain('x="-10" y="-50"')
 })
+
+test("uses the same text layout for ordinary and knockout text", () => {
+  const source =
+    "|RECORD=Board\n|RECORD=Text|LAYER=TOPOVERLAY|X=100mil|Y=100mil|HEIGHT=40mil|WIDESTRING=68,65,84,65,10,80,87,82|JUSTIFICATION=5|BOLD=TRUE|ITALIC=TRUE"
+  const ordinary = serializeAltiumPcbToSvg(parseAltiumPcbDoc(source))
+  const knockout = serializeAltiumPcbToSvg(
+    parseAltiumPcbDoc(`${source}|INVERTED=TRUE|MARGINBORDERWIDTH=10mil`),
+  )
+  const text = (svg: string) => {
+    const match = svg.match(/<text[^>]*>([\s\S]*?)<\/text>/)
+    if (!match) throw new Error("Expected rendered PCB text")
+    return match[0]
+      .replace(
+        / data-record="[^"]*"| data-layer="[^"]*"| transform="[^"]*"/g,
+        "",
+      )
+      .replace(/fill="[^"]*"/, 'fill="shared"')
+      .replace(/\s+/g, " ")
+  }
+  expect(text(knockout)).toBe(text(ordinary))
+  expect(knockout).toContain('<tspan x="0" dy="48">PWR</tspan>')
+  expect(knockout).not.toContain("textLength=")
+  expect(knockout).not.toContain("lengthAdjust=")
+})

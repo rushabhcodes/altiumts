@@ -157,19 +157,23 @@ export function renderPcbRecord({
     const fontStyle = record.getBoolean("ITALIC") ? "italic" : "normal"
     const positioning = getPcbTextPositioning(record.getNumber("JUSTIFICATION"))
     const lines = normalizedText.split("\n")
-    const textContent =
-      lines.length === 1
-        ? escapeXml(normalizedText)
-        : lines
-            .map(
-              (line, index) =>
-                `<tspan x="0" dy="${index === 0 ? "0" : formatSvgNumber(height * 1.2)}">${escapeXml(line)}</tspan>`,
-            )
-            .join("")
+    let textContent = escapeXml(normalizedText)
+    if (lines.length > 1) {
+      textContent = lines
+        .map((line, index) => {
+          let dy = "0"
+          if (index > 0) dy = formatSvgNumber(height * 1.2)
+          return `<tspan x="0" dy="${dy}">${escapeXml(line)}</tspan>`
+        })
+        .join("")
+    }
+    const renderText = (fill: string, attributes = "") =>
+      `<text ${attributes} x="0" y="0" fill="${fill}" font-family="${escapeXml(fontName)}, sans-serif" font-size="${formatSvgNumber(height)}" font-weight="${fontWeight}" font-style="${fontStyle}" text-anchor="${positioning.anchor}" dominant-baseline="${positioning.baseline}">${textContent}</text>`
+    const transform = `translate(${formatSvgNumber(x)} ${formatSvgNumber(y)}) rotate(${formatSvgNumber(-rotation)}) scale(${mirror} 1)`
     if (record.getBoolean("INVERTED")) {
       const margin = Math.max(getPcbMeasurement(record, "MARGINBORDERWIDTH"), 0)
-      // SVG serialization has no font measurement API. Estimate the glyph
-      // width and constrain the text to keep it inside the background.
+      // Estimate only the background bounds. Glyphs use the same natural
+      // font sizing and line layout as ordinary text.
       const textWidth =
         Math.max(...lines.map((line) => line.length)) * height * 0.8
       const textHeight = height * (1 + (lines.length - 1) * 1.2)
@@ -187,18 +191,10 @@ export function renderPcbRecord({
       }
       const rectangle = `x="${formatSvgNumber(left - margin)}" y="${formatSvgNumber(top - margin)}" width="${formatSvgNumber(width)}" height="${formatSvgNumber(boxHeight)}"`
       const maskId = `pcb-knockout-${recordIndex}`
-      const maskedText = lines
-        .map((line, index) => {
-          let lengthAttributes = ""
-          if (line.length > 0) {
-            lengthAttributes = ` textLength="${formatSvgNumber(line.length * height * 0.8)}" lengthAdjust="spacingAndGlyphs"`
-          }
-          return `<text x="0" y="${formatSvgNumber(index * height * 1.2)}" fill="black" font-family="${escapeXml(fontName)}, sans-serif" font-size="${formatSvgNumber(height)}" font-weight="${fontWeight}" font-style="${fontStyle}" text-anchor="${positioning.anchor}" dominant-baseline="${positioning.baseline}"${lengthAttributes}>${escapeXml(line)}</text>`
-        })
-        .join("")
-      return `<g ${metadata} data-knockout="true" transform="translate(${formatSvgNumber(x)} ${formatSvgNumber(y)}) rotate(${formatSvgNumber(-rotation)}) scale(${mirror} 1)"><defs><mask id="${maskId}" maskUnits="userSpaceOnUse" ${rectangle} style="mask-type:luminance"><rect ${rectangle} fill="white"/>${maskedText}</mask></defs><rect ${rectangle} fill="${color}" mask="url(#${maskId})"/></g>`
+      const maskedText = renderText("black")
+      return `<g ${metadata} data-knockout="true" transform="${transform}"><defs><mask id="${maskId}" maskUnits="userSpaceOnUse" ${rectangle} style="mask-type:luminance"><rect ${rectangle} fill="white"/>${maskedText}</mask></defs><rect ${rectangle} fill="${color}" mask="url(#${maskId})"/></g>`
     }
-    return `<text ${metadata} x="0" y="0" fill="${color}" font-family="${escapeXml(fontName)}, sans-serif" font-size="${formatSvgNumber(height)}" font-weight="${fontWeight}" font-style="${fontStyle}" text-anchor="${positioning.anchor}" dominant-baseline="${positioning.baseline}" transform="translate(${formatSvgNumber(x)} ${formatSvgNumber(y)}) rotate(${formatSvgNumber(-rotation)}) scale(${mirror} 1)">${textContent}</text>`
+    return renderText(color, `${metadata} transform="${transform}"`)
   }
 
   if (kind === "Component" && svgOptions.showComponentOrigins) {
