@@ -173,18 +173,12 @@ export function renderPcbRecord({
       const textWidth =
         Math.max(...lines.map((line) => line.length)) * height * 0.8
       const textHeight = height * (1 + (lines.length - 1) * 1.2)
-      const left =
-        positioning.anchor === "middle"
-          ? -textWidth / 2
-          : positioning.anchor === "end"
-            ? -textWidth
-            : 0
-      const top =
-        positioning.baseline === "central"
-          ? -height / 2
-          : positioning.baseline === "text-after-edge"
-            ? -height
-            : 0
+      let left = 0
+      if (positioning.anchor === "middle") left = -textWidth / 2
+      else if (positioning.anchor === "end") left = -textWidth
+      let top = 0
+      if (positioning.baseline === "central") top = -height / 2
+      else if (positioning.baseline === "text-after-edge") top = -height
       const width = record.getBoolean("INVERTEDRECT")
         ? getPcbMeasurement(record, "TEXTBOXWIDTH", textWidth + 2 * margin)
         : textWidth + 2 * margin
